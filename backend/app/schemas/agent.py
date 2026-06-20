@@ -1,6 +1,6 @@
 """客服工作台相关 Schema"""
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional
 from datetime import datetime
 
@@ -12,8 +12,7 @@ class SessionListItem(BaseModel):
     current_agent_type: str
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ReplyRequest(BaseModel):

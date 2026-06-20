@@ -5,10 +5,9 @@ from sqlalchemy.orm import Session
 from typing import Optional
 
 from app.core.database import get_db
-from app.schemas.chat import ChatRequest, ChatResponse, MessageCreate, SessionCreate
+from app.schemas.chat import ChatRequest, ChatResponse
 from app.services.chat_service import ChatService
-from app.models.session import Session as SessionModel
-from app.models.message import Message
+from app.models.session import Session as SessionModel, Message
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
@@ -17,13 +16,17 @@ router = APIRouter(prefix="/chat", tags=["chat"])
 async def send_message(req: ChatRequest, db: Session = Depends(get_db)):
     """发送消息，返回 AI 回复"""
     # 获取或创建会话
-    session = (
-        db.query(SessionModel)
-        .filter(SessionModel.id == req.session_id)
-        .first()
-    )
+    if req.session_id:
+        session = db.query(SessionModel).filter(SessionModel.id == req.session_id).first()
+    else:
+        session = None
+
     if not session:
-        session = SessionModel(tenant_id=req.tenant_id, user_id=req.user_id, channel=req.channel or "web")
+        session = SessionModel(
+            tenant_id=req.tenant_id or "default",
+            user_id=req.user_id or "anonymous",
+            channel=req.channel or "web",
+        )
         db.add(session)
         db.commit()
         db.refresh(session)
@@ -41,7 +44,10 @@ async def send_message(req: ChatRequest, db: Session = Depends(get_db)):
         .limit(20)
         .all()
     )
-    context = [{"role": "user" if m.sender_type == "user" else "assistant", "content": m.content} for m in reversed(messages)]
+    context = [
+        {"role": "user" if m.sender_type == "user" else "assistant", "content": m.content}
+        for m in reversed(messages)
+    ]
 
     # 调用 Agnes AI
     service = ChatService(db)
@@ -70,5 +76,8 @@ def get_session(session_id: str, db: Session = Depends(get_db)):
     )
     return {
         "session": session,
-        "messages": [{"sender": m.sender_type, "content": m.content, "created_at": m.created_at} for m in messages],
+        "messages": [
+            {"sender": m.sender_type, "content": m.content, "created_at": m.created_at}
+            for m in messages
+        ],
     }

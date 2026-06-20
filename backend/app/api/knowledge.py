@@ -1,6 +1,6 @@
 """知识库 API"""
 
-from fastapi import APIRouter, Depends, UploadFile, File
+from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -26,11 +26,16 @@ async def upload_knowledge(
             content = content.decode("utf-8")
 
     if not content:
-        raise ValueError("No content provided")
+        raise HTTPException(status_code=400, detail="No content provided")
 
     service = KnowledgeService(db)
-    entry = await service.import_document(title or "Untitled", content, category)
-    return entry
+    entry = service.import_document(title or "Untitled", content, category)
+    return KnowledgeEntryResponse(
+        id=entry.id,
+        title=entry.title,
+        category=entry.category,
+        created_at=entry.created_at,
+    )
 
 
 @router.get("")
