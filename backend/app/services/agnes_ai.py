@@ -1,7 +1,9 @@
 """Agnes AI 多模态模型封装"""
 
+import asyncio
+import json
 import httpx
-from typing import Optional
+from typing import AsyncGenerator, Optional
 from app.core.config import settings
 
 
@@ -26,6 +28,23 @@ class AgnesAI:
             return resp.json()
 
     async def chat_completion(
+        self,
+        messages: list,
+        model: Optional[str] = None,
+        stream: bool = False,
+        max_tokens: int = 2048,
+    ) -> dict:
+        """文本对话（支持流式）"""
+        payload = {
+            "model": model or self.default_model,
+            "messages": messages,
+            "max_tokens": max_tokens,
+        }
+        if stream:
+            payload["stream"] = True
+        return await self._request("POST", "/chat/completions", payload)
+
+    async def chat_stream(
         self,
         messages: list,
         model: Optional[str] = None,
@@ -84,6 +103,14 @@ class AgnesAI:
                 "max_tokens": 2048,
             },
         )
+
+    async def embedding(self, text: str, model: str = "agnes-embedding-v1") -> dict:
+        """Generate embedding vector for text. Returns OpenAI-compatible dict."""
+        payload = {
+            "model": model,
+            "input": text,
+        }
+        return await self._request("POST", "/embeddings", payload)
 
 
 # 单例
