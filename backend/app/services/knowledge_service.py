@@ -1,5 +1,6 @@
 """知识库服务"""
 
+import asyncio
 import re
 from sqlalchemy.orm import Session
 from app.core.qdrant_client import qdrant_client, COLLECTION_NAME, VECTOR_SIZE
@@ -13,23 +14,58 @@ class KnowledgeService:
     def __init__(self, db: Session):
         self.db = db
 
-    def import_document(self, title: str, content: str, category: str = "default"):
-        """导入文档，分块并向量化存储"""
+    async def import_document_async(self, title: str, content: str, category: str, tenant_id: str = "default"):
+        """Async version of import with Qdrant vector storage"""
+        from qdrant_client.models import PointStruct
+
         chunks = self._chunk(content)
 
-        # 创建知识库条目
-        entry = KnowledgeEntry(title=title, content=content, category=category)
+        # Create knowledge entry
+        entry = KnowledgeEntry(
+            tenant_id=tenant_id,
+            title=title,
+            content=content,
+            category=category,
+        )
         self.db.add(entry)
         self.db.flush()
+        self.db.refresh(entry)
 
-        # TODO: 调用 Agnes embedding API 生成向量并存入 Qdrant
-        # for chunk in chunks:
-        #     vector = await agnes_ai.embedding(chunk.text)
-        #     qdrant_client.upsert(COLLECTION_NAME, points=[PointStruct(...)])
+        # Generate embeddings and upsert to Qdrant
+        points = []
+        for i, chunk_text in enumerate(chunks):
+            embed_resp = await agnes_ai.embedding(chunk_text)
+            vector = embed_resp["data"][0]["embedding"]
+
+            points.append({
+                "id": f"{entry.id}_{i}",
+                "vector": vector,
+                "payload": {
+                    "tenant_id": tenant_id,
+                    "entry_id": entry.id,
+                    "title": title,
+                    "category": category,
+                    "content": chunk_text,
+                    "chunk_index": i,
+                },
+            })
+
+        if points:
+            point_structs = [
+                PointStruct(id=p["id"], vector=p["vector"], payload=p["payload"])
+                for p in points
+            ]
+            qdrant_client.upsert(collection_name=COLLECTION_NAME, points=point_structs)
+            entry.vector_id = points[0]["id"]
 
         self.db.commit()
-        self.db.refresh(entry)
         return entry
+
+    def import_document(self, title: str, content: str, category: str = "default", tenant_id: str = "default"):
+        """导入文档，分块并向量化存储（同步包装器）"""
+        return asyncio.get_event_loop().run_until_complete(
+            self.import_document_async(title, content, category, tenant_id)
+        )
 
     def _chunk(self, text: str, chunk_size: int = 500, overlap: int = 50) -> list:
         """文档分块"""
