@@ -27,4 +27,13 @@ def init_collection(client: QdrantClient):
         )
 
 
+def init_payload_schema(client: QdrantClient):
+    """Initialize payload indexes for filtered queries"""
+    client.create_payload_index(
+        collection_name=COLLECTION_NAME,
+        field_name="tenant_id",
+        field_schema=PayloadSchemaType.KEYWORD,
+    )
+
+
 qdrant_client = get_qdrant_client()
