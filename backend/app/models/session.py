@@ -16,6 +16,9 @@ class Session(Base):
     channel = Column(VARCHAR(20), default="web")  # web, miniapp, app
     status = Column(VARCHAR(20), default="active")  # active, human, closed
     current_agent_type = Column(VARCHAR(20), default="ai")  # ai, agent
+    last_message_at = Column(DateTime, nullable=True)
+    message_count = Column(Integer, default=0)
+    query_count = Column(Integer, default=0)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
@@ -28,6 +31,11 @@ class Message(Base):
     sender_type = Column(VARCHAR(20), nullable=False)  # user, assistant, agent
     content = Column(Text, nullable=False)
     content_type = Column(VARCHAR(20), default="text")  # text, image, video, audio
+
+    @staticmethod
+    def utcnow():
+        return datetime.now(timezone.utc)
+
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
