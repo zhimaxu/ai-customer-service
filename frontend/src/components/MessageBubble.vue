@@ -1,9 +1,16 @@
 <template>
   <div class="message-bubble" :class="[senderClass, { streaming }]">
-    <span class="avatar">{{ sender === 'user' ? '🧑' : '🤖' }}</span>
-    <div class="bubble-content">
-      <div class="bubble-text" v-html="formattedContent"></div>
-      <div class="bubble-time">{{ time }}</div>
+    <div class="avatar" :class="senderClass">
+      {{ avatarLetter }}
+    </div>
+    <div class="bubble-wrapper">
+      <div class="bubble-content">
+        <div class="bubble-text" v-html="formattedContent"></div>
+        <div class="bubble-footer">
+          <span class="bubble-time">{{ time }}</span>
+          <span v-if="streaming" class="streaming-dot"></span>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -16,6 +23,11 @@ const props = defineProps({
   content: { type: String, default: '' },
   time: { type: String, default: '' },
   streaming: { type: Boolean, default: false },
+})
+
+const avatarLetter = computed(() => {
+  if (props.sender === 'user') return 'U'
+  return 'AI'
 })
 
 const senderClass = computed(() => `msg-${props.sender}`)
@@ -31,42 +43,111 @@ const formattedContent = computed(() => {
 <style scoped>
 .message-bubble {
   display: flex;
-  gap: 10px;
-  padding: 8px 0;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
   align-items: flex-start;
+  animation: messageIn 0.3s ease-out;
 }
-.msg-user { flex-direction: row-reverse; }
-.avatar { flex-shrink: 0; font-size: 24px; }
-.bubble-content { max-width: 70%; }
+
+@keyframes messageIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.msg-user {
+  flex-direction: row-reverse;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+}
+
+.msg-user .avatar {
+  background: linear-gradient(135deg, var(--coral-primary), var(--coral-light));
+  box-shadow: var(--shadow-glow-coral);
+}
+
+.msg-assistant .avatar {
+  background: linear-gradient(135deg, var(--purple-accent), var(--purple-light));
+  box-shadow: var(--shadow-glow-purple);
+}
+
+.bubble-wrapper {
+  max-width: 70%;
+  display: flex;
+  flex-direction: column;
+}
+
+.msg-user .bubble-wrapper {
+  align-items: flex-end;
+}
+
+.bubble-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .bubble-text {
-  padding: 10px 14px;
-  border-radius: 12px;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
   line-height: 1.6;
   word-break: break-word;
+  white-space: pre-wrap;
 }
+
 .msg-user .bubble-text {
-  background: #1976d2;
-  color: white;
-  border-top-right-radius: 4px;
+  background: linear-gradient(135deg, var(--coral-primary), var(--coral-light));
+  color: var(--text-inverse);
+  border-top-right-radius: var(--radius-sm);
 }
+
 .msg-assistant .bubble-text {
-  background: #f5f5f5;
-  color: #333;
-  border-top-left-radius: 4px;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-top-left-radius: var(--radius-sm);
 }
+
+.bubble-footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
 .bubble-time {
   font-size: 11px;
-  color: #bbb;
-  margin-top: 4px;
-  text-align: right;
+  color: var(--text-muted);
+  font-family: SF Mono, Consolas, monospace;
 }
-.msg-user .bubble-time { text-align: left; }
-.streaming .bubble-text::after {
-  content: '▋';
-  animation: blink 1s infinite;
+
+.streaming-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: var(--coral-primary);
+  border-radius: 50%;
+  animation: pulseDot 1.2s infinite ease-in-out;
 }
-@keyframes blink {
-  0%, 50% { opacity: 1; }
-  51%, 100% { opacity: 0; }
+
+@keyframes pulseDot {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40% { transform: scale(1); opacity: 1; }
 }
 </style>
