@@ -8,30 +8,31 @@ const routes = [
     path: '/login',
     name: 'Login',
     component: () => import('../views/Login.vue'),
-    meta: { requiresAuth: false },
+    meta: { requiresAuth: false, transition: 'none' },
   },
   {
     path: '/',
     name: 'Chat',
     component: () => import('../views/ChatView.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, transition: 'fade-slide' },
   },
   {
     path: '/dashboard',
     name: 'Dashboard',
     component: DashboardView,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, transition: 'fade-slide' },
   },
   {
     path: '/agent',
     name: 'Agent',
     component: AgentView,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, transition: 'fade-slide' },
   },
   {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: () => import('../views/Login.vue'),
+    meta: { requiresAuth: false },
   },
 ]
 
