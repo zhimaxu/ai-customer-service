@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import AgentView from '../views/AgentView.vue'
 import { useAuthStore } from '../stores/auth'
 
 const routes = [
@@ -12,6 +13,12 @@ const routes = [
     path: '/',
     name: 'Chat',
     component: () => import('../views/ChatView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/agent',
+    name: 'Agent',
+    component: AgentView,
     meta: { requiresAuth: true },
   },
   {
