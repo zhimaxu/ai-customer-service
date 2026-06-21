@@ -1,7 +1,14 @@
 <template>
-  <div class="file-upload" @drop.prevent="handleDrop" @dragover.prevent>
+  <div
+    class="file-upload"
+    @drop.prevent="handleDrop"
+    @dragover.prevent
+    @click="$refs.fileInput?.click()"
+  >
     <el-tooltip content="拖拽或点击上传文件" placement="top">
-      <el-button :icon="Upload" circle @click="$refs.fileInput.click()" />
+      <el-button circle class="upload-btn">
+        <el-icon :size="18"><Upload /></el-icon>
+      </el-button>
     </el-tooltip>
     <input
       ref="fileInput"
@@ -54,3 +61,18 @@ async function processFile(file) {
   }
 }
 </script>
+
+<style scoped>
+.upload-btn {
+  background: var(--bg-elevated) !important;
+  border: 1px dashed var(--border-medium) !important;
+  color: var(--text-secondary) !important;
+  transition: all var(--transition-fast);
+}
+
+.upload-btn:hover {
+  border-color: var(--coral-primary) !important;
+  color: var(--coral-primary) !important;
+  box-shadow: var(--shadow-glow-coral);
+}
+</style>
