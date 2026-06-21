@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import AgentView from '../views/AgentView.vue'
+import DashboardView from '../views/DashboardView.vue'
 import { useAuthStore } from '../stores/auth'
 
 const routes = [
@@ -13,6 +14,12 @@ const routes = [
     path: '/',
     name: 'Chat',
     component: () => import('../views/ChatView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/dashboard',
+    name: 'Dashboard',
+    component: DashboardView,
     meta: { requiresAuth: true },
   },
   {
