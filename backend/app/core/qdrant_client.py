@@ -1,7 +1,7 @@
 """Qdrant 向量数据库客户端"""
 
 from qdrant_client import QdrantClient
-from qdrant_client.models import Distance, VectorParams, InitCondition, PayloadSchemaType
+from qdrant_client.models import Distance, VectorParams, PayloadSchemaType
 
 from app.core.config import settings
 

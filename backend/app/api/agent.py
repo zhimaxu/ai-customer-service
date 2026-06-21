@@ -82,9 +82,8 @@ def takeover_session(session_id: str, req: TakeoverRequest = None, db: Session =
 
     # Notify via WebSocket
     agent_id = req.agent_id if req else "unknown"
-    import asyncio
     try:
-        asyncio.get_event_loop().create_task(
+        asyncio.create_task(
             manager.broadcast(session_id, {
                 "type": "notification",
                 "session_id": session_id,

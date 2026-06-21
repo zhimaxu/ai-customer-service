@@ -12,9 +12,12 @@ from app.core.qdrant_client import init_collection, init_payload_schema, qdrant_
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application startup: initialize Qdrant collection"""
-    init_collection(qdrant_client)
-    init_payload_schema(qdrant_client)
+    """Application startup: initialize Qdrant collection (best-effort)"""
+    try:
+        init_collection(qdrant_client)
+        init_payload_schema(qdrant_client)
+    except Exception as e:
+        print(f"[WARN] Qdrant init skipped (service unavailable): {e}")
     yield
     # Shutdown cleanup (if any)
 

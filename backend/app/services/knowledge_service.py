@@ -66,7 +66,7 @@ class KnowledgeService:
 
     def import_document(self, title: str, content: str, category: str = "default", tenant_id: str = "default"):
         """导入文档，分块并向量化存储（同步包装器）"""
-        return asyncio.get_event_loop().run_until_complete(
+        return asyncio.run(
             self.import_document_async(title, content, category, tenant_id)
         )
 

@@ -121,6 +121,21 @@ Vue 3 聊天界面 + SSE/WebSocket + 文件上传
 - 租户数据严格隔离，JWT 鉴权
 - 对话数据保留 90 天后归档，压缩文件保留 180 天
 
+## 跨平台路径规范
+
+- 代码中（Python/JS）统一使用 `/` 分隔符，用 `pathlib.Path` 或 `path.join` 拼接路径，避免硬编码 `\`
+- 配置文件（docker-compose.yml、nginx.conf 等）遵循对应工具的语法要求
+- 文档中的路径引用使用正斜杠 `/`（如 `backend/app/services/`）
+- 终端命令中：Windows 下注意 `C:\` 盘符，Linux 下为 `/home/` 等 Unix 风格路径
+- 涉及文件读写时，始终以运行环境实际路径为准，不要假设 Windows 和 Linux 路径格式相同
+
+## Write 工具路径转义规范
+
+- **file_path 必须使用正斜杠 `/`**：`c:/Code/...` 而非 `c:\Code\...`
+- Windows 路径中的 `\` 在 JSON 中是非法转义序列，会导致 Write/Bash 工具参数丢失
+- 如果路径包含特殊字符，优先使用**相对路径**（相对于工作目录 `c:/Code/Claude/ai-customer-service/`）
+- Bash 命令中的路径同样使用正斜杠 `/`
+
 ---
 
 ## 参考文档

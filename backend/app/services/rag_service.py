@@ -1,8 +1,12 @@
 """RAG (Retrieval-Augmented Generation) service"""
 
+import logging
+
 from app.core.qdrant_client import qdrant_client, COLLECTION_NAME
 from app.services.agnes_ai import agnes_ai
 from qdrant_client.models import Filter, FieldCondition, MatchValue
+
+logger = logging.getLogger(__name__)
 
 
 class RAGService:
@@ -15,9 +19,14 @@ class RAGService:
         """
         Retrieve relevant knowledge fragments for a query.
         Returns list of text snippets (strings).
+        Gracefully returns empty list if embedding service is unavailable.
         """
-        embed_resp = await agnes_ai.embedding(query)
-        query_vector = embed_resp["data"][0]["embedding"]
+        try:
+            embed_resp = await agnes_ai.embedding(query)
+            query_vector = embed_resp["data"][0]["embedding"]
+        except Exception as e:
+            logger.warning(f"Embedding failed, skipping RAG: {e}")
+            return []
 
         search_filter = Filter(
             must=[
@@ -25,13 +34,17 @@ class RAGService:
             ]
         )
 
-        hits = qdrant_client.search(
-            collection_name=COLLECTION_NAME,
-            query_vector=query_vector,
-            limit=top_k,
-            score_threshold=score_threshold,
-            query_filter=search_filter,
-        )
+        try:
+            hits = qdrant_client.search(
+                collection_name=COLLECTION_NAME,
+                query_vector=query_vector,
+                limit=top_k,
+                score_threshold=score_threshold,
+                query_filter=search_filter,
+            )
+        except Exception as e:
+            logger.warning(f"Qdrant search failed: {e}")
+            return []
 
         snippets = []
         for hit in hits:
@@ -43,8 +56,11 @@ class RAGService:
 
     async def retrieve_fallback(self, query: str, top_k: int = 5) -> list:
         """Fallback: search without score threshold"""
-        embed_resp = await agnes_ai.embedding(query)
-        query_vector = embed_resp["data"][0]["embedding"]
+        try:
+            embed_resp = await agnes_ai.embedding(query)
+            query_vector = embed_resp["data"][0]["embedding"]
+        except Exception:
+            return []
 
         hits = qdrant_client.search(
             collection_name=COLLECTION_NAME,

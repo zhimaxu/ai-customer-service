@@ -15,21 +15,21 @@ class Settings(BaseSettings):
     KNOWLEDGE_CHUNK_OVERLAP: int = 50
 
     # MySQL
-    MYSQL_HOST: str = "mysql"
+    MYSQL_HOST: str = "localhost"
     MYSQL_PORT: int = 3306
     MYSQL_DATABASE: str = "ai_customer_service"
-    MYSQL_USER: str = "cs_user"
-    MYSQL_PASSWORD: str = "cs_password"
+    MYSQL_USER: str = "root"
+    MYSQL_PASSWORD: str = "root"
 
     # Qdrant
-    QDRANT_HOST: str = "qdrant"
+    QDRANT_HOST: str = "localhost"
     QDRANT_PORT: int = 6333
 
     # Redis
-    REDIS_URL: str = "redis://redis:6379/0"
+    REDIS_URL: str = "redis://localhost:6379/0"
 
     # RabbitMQ
-    RABBITMQ_URL: str = "amqp://guest:guest@rabbitmq:5672/"
+    RABBITMQ_URL: str = "amqp://guest:guest@localhost:5672/"
 
     # JWT
     SECRET_KEY: str = "change-me-in-production"

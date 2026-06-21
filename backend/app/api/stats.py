@@ -89,7 +89,7 @@ def get_overview(db: Session = Depends(get_db)):
 
 @router.get("/chat")
 def get_chat_stats(
-    period: str = Query("day", regex="^(day|week|month)$"),
+    period: str = Query("day", pattern="^(day|week|month)$"),
     db: Session = Depends(get_db),
 ):
     """对话统计"""
