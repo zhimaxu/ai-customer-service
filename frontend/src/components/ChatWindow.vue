@@ -1,7 +1,10 @@
 <template>
-  <div class="chat-window">
+  <div class="chat-window dot-grid-bg">
     <div class="messages-area" ref="messagesRef">
       <div v-if="messages.length === 0" class="welcome">
+        <div class="welcome-icon">
+          <el-icon :size="48"><ChatDotRound /></el-icon>
+        </div>
         <h2>欢迎使用 AI 智能客服</h2>
         <p>选择或创建一个会话开始对话</p>
       </div>
@@ -11,19 +14,27 @@
         :sender="msg.sender"
         :content="msg.content"
         :time="msg.time"
+        :streaming="idx === messages.length - 1 && isStreaming"
       />
-      <TypingIndicator v-if="isStreaming" />
+      <TypingIndicator v-if="isStreaming && messages.length === 0" />
     </div>
 
-    <div class="input-area">
+    <div class="input-area glass">
       <el-input
         v-model="inputText"
         type="textarea"
         :rows="2"
         placeholder="输入消息... (Ctrl+Enter 发送)"
         @keydown.ctrl.enter="sendMessage"
+        class="dark-input"
       />
-      <el-button type="primary" @click="sendMessage" :disabled="!inputText.trim()" :icon="Promotion">
+      <el-button
+        type="primary"
+        @click="sendMessage"
+        :disabled="!inputText.trim()"
+        class="coral-send-btn"
+      >
+        <el-icon><Promotion /></el-icon>
         发送
       </el-button>
     </div>
@@ -32,7 +43,7 @@
 
 <script setup>
 import { ref, computed, nextTick, watch } from 'vue'
-import { Promotion } from '@element-plus/icons-vue'
+import { Promotion, ChatDotRound } from '@element-plus/icons-vue'
 import { useSessionStore } from '../stores/session'
 import MessageBubble from './MessageBubble.vue'
 import TypingIndicator from './TypingIndicator.vue'
@@ -132,7 +143,7 @@ async function sendMessage() {
           const parsed = JSON.parse(dataStr)
           sessionStore.addMessage({
             sender: 'assistant',
-            content: 'Error: ' + parsed.detail,
+            content: '出错了: ' + parsed.detail,
             time: new Date().toLocaleTimeString(),
           })
         }
@@ -141,7 +152,7 @@ async function sendMessage() {
   } catch (error) {
     sessionStore.addMessage({
       sender: 'assistant',
-      content: 'Failed to send: ' + error.message,
+      content: '发送失败: ' + error.message,
       time: new Date().toLocaleTimeString(),
     })
   } finally {
@@ -157,24 +168,97 @@ async function sendMessage() {
   flex-direction: column;
   height: 100%;
 }
+
 .messages-area {
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
+  padding: var(--space-6);
 }
+
 .welcome {
   text-align: center;
-  padding: 60px 20px;
-  color: #999;
+  padding: var(--space-16) var(--space-6);
+  color: var(--text-muted);
+  animation: fadeIn 0.5s ease-out;
 }
-.welcome h2 { color: #333; margin-bottom: 8px; }
-.input-area {
-  border-top: 1px solid #e0e0e0;
-  padding: 12px;
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.welcome-icon {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto var(--space-4);
+  background: linear-gradient(135deg, var(--coral-primary), var(--purple-accent));
+  border-radius: 50%;
   display: flex;
-  gap: 8px;
-  align-items: flex-end;
-  background: #fff;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: var(--shadow-glow-coral);
 }
-.input-area .el-textarea { flex: 1; }
+
+.welcome h2 {
+  font-size: 22px;
+  font-weight: 600;
+  background: linear-gradient(135deg, var(--coral-primary), var(--coral-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0 0 var(--space-2) 0;
+}
+
+.welcome p {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.input-area {
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-end;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.input-area .el-textarea {
+  flex: 1;
+}
+
+:deep(.dark-input .el-textarea__inner) {
+  background-color: var(--bg-input) !important;
+  border-color: var(--border-subtle) !important;
+  color: var(--text-primary) !important;
+  border-radius: var(--radius-md) !important;
+}
+
+:deep(.dark-input .el-textarea__inner:focus) {
+  border-color: var(--coral-primary) !important;
+  box-shadow: 0 0 0 1px var(--coral-primary) !important;
+}
+
+.coral-send-btn {
+  background: linear-gradient(135deg, var(--coral-primary), var(--coral-light)) !important;
+  border: none !important;
+  color: white !important;
+  border-radius: var(--radius-md) !important;
+  padding: 0 var(--space-4) !important;
+  font-weight: 600 !important;
+  box-shadow: var(--shadow-glow-coral);
+  transition: all var(--transition-base);
+  white-space: nowrap;
+}
+
+.coral-send-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 0 24px rgba(255, 107, 53, 0.4) !important;
+}
+
+.coral-send-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
 </style>
