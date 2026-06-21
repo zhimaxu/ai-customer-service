@@ -8,6 +8,7 @@ from app.api.agent import router as agent_router
 from app.api.admin import router as admin_router
 from app.api.system import router as system_router
 from app.api.ticket import router as ticket_router
+from app.api.ws import router as ws_router
 
 api_router = APIRouter()
 api_router.include_router(chat_router)
@@ -16,3 +17,4 @@ api_router.include_router(agent_router)
 api_router.include_router(admin_router)
 api_router.include_router(system_router)
 api_router.include_router(ticket_router)
+api_router.include_router(ws_router)
