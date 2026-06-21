@@ -42,3 +42,25 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
+
+  backend:
+    build: ./backend
+    container_name: ai-cs-backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mysql
+      - qdrant
+      - redis
+    environment:
+      - MYSQL_HOST=mysql
+      - QDRANT_HOST=qdrant
+      - REDIS_URL=redis://redis:6379/0
+
+  frontend:
+    build: ./frontend
+    container_name: ai-cs-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
