@@ -2,6 +2,9 @@
 
 import asyncio
 import re
+from typing import Optional
+
+import sqlalchemy as sa
 from sqlalchemy.orm import Session
 from app.core.qdrant_client import qdrant_client, COLLECTION_NAME, VECTOR_SIZE
 from app.models.knowledge import KnowledgeEntry
@@ -97,3 +100,74 @@ class KnowledgeService:
         self.db.delete(entry)
         self.db.commit()
         return {"status": "deleted"}
+
+    def search(self, query: str = None, category: str = None, tag: str = None,
+               tenant_id: str = "default", page: int = 1, page_size: int = 20) -> dict:
+        """Search knowledge entries by keyword/category/tag"""
+        base_query = self.db.query(KnowledgeEntry).filter(
+            KnowledgeEntry.tenant_id == tenant_id
+        )
+
+        if query:
+            base_query = base_query.filter(
+                sa.or_(
+                    KnowledgeEntry.title.contains(query),
+                    KnowledgeEntry.content.contains(query),
+                    KnowledgeEntry.tags.contains(query),
+                )
+            )
+        if category:
+            base_query = base_query.filter(KnowledgeEntry.category == category)
+        if tag:
+            base_query = base_query.filter(KnowledgeEntry.tags.like(f"%{tag}%"))
+
+        total = base_query.count()
+        entries = (
+            base_query.order_by(KnowledgeEntry.created_at.desc())
+            .offset((page - 1) * page_size)
+            .limit(page_size)
+            .all()
+        )
+        return {
+            "entries": [self._entry_to_dict(e) for e in entries],
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+        }
+
+    def get_entry(self, entry_id: str) -> Optional[KnowledgeEntry]:
+        """Get single knowledge entry"""
+        return self.db.query(KnowledgeEntry).filter(KnowledgeEntry.id == entry_id).first()
+
+    def update_entry(self, entry_id: str, title: str = None, content: str = None,
+                     category: str = None, tags: str = None, tenant_id: str = "default") -> Optional[KnowledgeEntry]:
+        """Update a knowledge entry"""
+        entry = self.db.query(KnowledgeEntry).filter(
+            sa.and_(KnowledgeEntry.id == entry_id, KnowledgeEntry.tenant_id == tenant_id)
+        ).first()
+        if not entry:
+            return None
+        if title:
+            entry.title = title
+        if content:
+            entry.content = content
+        if category:
+            entry.category = category
+        if tags:
+            entry.tags = tags
+        self.db.commit()
+        self.db.refresh(entry)
+        return entry
+
+    @staticmethod
+    def _entry_to_dict(entry) -> dict:
+        return {
+            "id": entry.id,
+            "tenant_id": entry.tenant_id,
+            "title": entry.title,
+            "category": entry.category,
+            "tags": entry.tags,
+            "vector_id": entry.vector_id,
+            "created_at": entry.created_at.isoformat() if entry.created_at else None,
+            "updated_at": entry.updated_at.isoformat() if entry.updated_at else None,
+        }
