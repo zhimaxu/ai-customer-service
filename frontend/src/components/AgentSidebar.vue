@@ -2,9 +2,12 @@
   <div class="agent-sidebar">
     <div class="sidebar-header">
       <h3>客服工作台</h3>
+      <el-badge :value="agentStore.unreadCount" :hidden="agentStore.unreadCount === 0" class="unread-badge">
+        <el-icon :size="16"><Bell /></el-icon>
+      </el-badge>
     </div>
 
-    <el-tabs v-model="activeTab" @tab-change="handleTabChange">
+    <el-tabs v-model="activeTab" @tab-change="handleTabChange" class="dark-tabs">
       <el-tab-pane label="全部" name="all" />
       <el-tab-pane label="AI" name="ai" />
       <el-tab-pane label="人工" name="agent" />
@@ -17,12 +20,13 @@
       :prefix-icon="Search"
       clearable
       size="small"
-      style="margin-bottom: 8px"
+      class="dark-input"
+      style="margin-bottom: var(--space-3)"
     />
 
     <div class="session-list">
       <div
-        v-for="s in filteredSessions"
+        v-for="(s, idx) in filteredSessions"
         :key="s.id"
         class="session-item"
         :class="{ active: currentSessionId === s.id }"
@@ -31,13 +35,18 @@
         <div class="session-info">
           <div class="session-header">
             <span class="session-user">{{ s.user_id }}</span>
-            <el-tag :type="getStatusType(s.status)" size="small">{{ s.status }}</el-tag>
+            <StatusDot :status="s.status" />
           </div>
-          <div class="session-meta">
-            <el-tag :type="s.current_agent_type === 'ai' ? 'info' : 'warning'" size="small">
+          <div class="session-tags">
+            <el-tag
+              :type="s.current_agent_type === 'ai' ? 'danger' : 'warning'"
+              size="small"
+              class="agent-tag"
+              effect="plain"
+            >
               {{ s.current_agent_type === 'ai' ? 'AI' : '人工' }}
             </el-tag>
-            <span>{{ s.message_count || 0 }} 条</span>
+            <span class="msg-count">{{ s.message_count || 0 }} 条</span>
           </div>
         </div>
       </div>
@@ -48,8 +57,9 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { Search } from '@element-plus/icons-vue'
+import { Search, Bell } from '@element-plus/icons-vue'
 import { useAgentStore } from '../stores/agent'
+import StatusDot from './StatusDot.vue'
 
 const props = defineProps({
   currentSessionId: String,
@@ -92,11 +102,6 @@ function handleTabChange(tab) {
   }
 }
 
-function getStatusType(status) {
-  const map = { active: 'success', human: 'warning', closed: 'info' }
-  return map[status] || 'info'
-}
-
 function selectSession(session) {
   emit('select', session)
 }
@@ -104,58 +109,147 @@ function selectSession(session) {
 
 <style scoped>
 .agent-sidebar {
-  width: 280px;
+  width: 320px;
   height: 100%;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid #e0e0e0;
-  background: #fafafa;
+  border-right: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
 }
+
 .sidebar-header {
-  padding: 16px;
-  border-bottom: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
 }
+
 .sidebar-header h3 {
   margin: 0;
   font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
 }
+
+.unread-badge {
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.unread-badge:hover {
+  color: var(--coral-primary);
+}
+
+:deep(.dark-tabs .el-tabs__header) {
+  border-bottom: 1px solid var(--border-subtle);
+  margin: 0;
+}
+
+:deep(.dark-tabs .el-tabs__item) {
+  color: var(--text-muted) !important;
+  border-color: var(--border-subtle) !important;
+}
+
+:deep(.dark-tabs .el-tabs__item.is-active) {
+  color: var(--coral-primary) !important;
+}
+
+:deep(.dark-tabs .el-tabs__active-bar) {
+  background: var(--coral-primary) !important;
+}
+
+:deep(.dark-tabs .el-tabs__content) {
+  display: none;
+}
+
 .session-list {
   flex: 1;
   overflow-y: auto;
 }
+
 .session-item {
-  padding: 12px 16px;
+  padding: var(--space-3) var(--space-4);
   cursor: pointer;
-  border-bottom: 1px solid #eee;
-  transition: background 0.2s;
+  border-bottom: 1px solid var(--border-subtle);
+  transition: all var(--transition-fast);
+  position: relative;
 }
+
+.session-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--coral-primary);
+  transform: scaleY(0);
+  transition: transform var(--transition-fast);
+}
+
 .session-item:hover {
-  background: #f0f0f0;
+  background: var(--bg-elevated);
 }
+
 .session-item.active {
-  background: #e3f2fd;
-  border-left: 3px solid #1976d2;
+  background: rgba(255, 107, 53, 0.06);
 }
+
+.session-item.active::before {
+  transform: scaleY(1);
+}
+
 .session-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 4px;
+  margin-bottom: var(--space-2);
 }
+
 .session-user {
   font-weight: 500;
   font-size: 14px;
+  color: var(--text-primary);
 }
-.session-meta {
-  font-size: 12px;
-  color: #999;
+
+.session-tags {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   align-items: center;
 }
+
+.agent-tag {
+  font-size: 11px !important;
+  border-radius: var(--radius-sm) !important;
+}
+
+.msg-count {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
 .empty {
   text-align: center;
-  color: #999;
-  padding: 40px 0;
+  color: var(--text-muted);
+  padding: var(--space-10) 0;
+  font-size: 13px;
+}
+
+:deep(.dark-input .el-input__wrapper) {
+  background-color: var(--bg-input) !important;
+  border-color: var(--border-subtle) !important;
+  box-shadow: none !important;
+  border-radius: var(--radius-sm) !important;
+}
+
+:deep(.dark-input .el-input__inner) {
+  color: var(--text-primary) !important;
+  font-size: 12px !important;
+}
+
+:deep(.dark-input .el-input__wrapper.is-focus) {
+  border-color: var(--coral-primary) !important;
 }
 </style>
