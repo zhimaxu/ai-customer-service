@@ -25,3 +25,8 @@ bcrypt==5.0.0
 
 # Utils
 python-multipart==0.0.32
+
+# File conversion
+pypdf==5.9.0
+python-docx==1.2.0
+openpyxl==3.1.5
